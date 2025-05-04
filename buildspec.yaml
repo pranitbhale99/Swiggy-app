@@ -12,11 +12,11 @@ phases:
       java: corretto17
       python: 3.11
     commands:
-      - echo Installing Trivy and SonarQube Scanner...
+      - echo "Installing Trivy and SonarQube Scanner..."
       - wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.46.0_Linux-64bit.tar.gz
       - tar zxvf trivy_0.46.0_Linux-64bit.tar.gz
       - mv trivy /usr/local/bin/
-  
+
   pre_build:
     commands:
       - echo "Performing Trivy file scan..."
@@ -34,8 +34,9 @@ phases:
 
 post_build:
   commands:
-    - echo "Build and analysis complete."
-    - aws ses send-email \
+    - |
+      echo "Build and analysis complete."
+      aws ses send-email \
         --from "pranitbhale@gmail.com" \
         --to "pranitbhale@gmail.com" \
         --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" \
