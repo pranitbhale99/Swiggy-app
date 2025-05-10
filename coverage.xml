@@ -1,0 +1,6 @@
+sonar-scanner \
+  -Dsonar.projectKey=swiggy \
+  -Dsonar.sources=. \
+  -Dsonar.host.url=http://52.73.145.115:9000 \
+  -Dsonar.login=$SONAR_TOKEN \
+  -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
