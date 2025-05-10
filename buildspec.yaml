@@ -59,7 +59,7 @@ phases:
       - echo "Sending SES email with build status..."
       - aws ses send-email \
           --from "pranitbhale@gmail.com" \
-          --to "pranitbhale@gmail.com" \
+          --to "pranitbhale99@gmail.com" \
           --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" \
           --text "Build status: $CODEBUILD_BUILD_STATUS" \
           --region "us-east-1"
