@@ -48,7 +48,7 @@ phases:
     - ./dependency-check.sh --scan . --format ALL
     - echo "Build completed successfully!"
     - echo "Running SonarQube analysis result"
-    - sonar-scanner -Dsonar.projectKey=swiggy -Dsonar.sources=. -Dsonar.host.url="http://52.73.145.115:%209000" -Dsonar.login=$SONAR_TOKEN
+    - sonar-scanner -Dsonar.projectKey=swiggy -Dsonar.sources=. -Dsonar.host.url="http://52.73.145.115:9000" -Dsonar.login=$SONAR_TOKEN
     - aws ses send-email --from "pranitbhale@gmail.com" --to "pranitbhale@gmail.com" --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" --text "Build status: $CODEBUILD_BUILD_STATUS" --region "us-east-1"
 
 
