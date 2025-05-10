@@ -16,20 +16,24 @@ phases:
   pre_build:
     commands:
       - echo "Installing dependencies..."
-      - echo "Performing Trivy file scan before building the image..."
+      - echo "Downloading and installing Trivy..."
       - wget https://github.com/aquasecurity/trivy/releases/download/v0.19.2/trivy_0.19.2_Linux-64bit.tar.gz
       - tar zxvf trivy_0.19.2_Linux-64bit.tar.gz
-      - export PATH=$PATH:$PWD
+      - chmod +x trivy
+      - mv trivy /usr/local/bin/
       - trivy filesystem --exit-code 0 --no-progress . >> trivyfilescan.txt
+
       - echo "Downloading and installing OWASP Dependency-Check..."
       - wget https://github.com/jeremylong/DependencyCheck/releases/download/v7.0.2/dependency-check-7.0.2-release.zip
       - unzip dependency-check-7.0.2-release.zip
+
+      - echo "Installing SonarScanner CLI..."
       - export SONAR_SCANNER_VERSION=4.7.0.2747
-      - export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
-      - curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-      - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-      - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
-      - export SONAR_SCANNER_OPTS="-server"
+      - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip
+      - unzip -o sonar-scanner.zip
+      - mv sonar-scanner-${SONAR_SCANNER_VERSION}-linux sonar-scanner
+      - export PATH=$PWD/sonar-scanner/bin:$PATH
+      - sonar-scanner --version
 
   build:
     commands:
@@ -43,18 +47,22 @@ phases:
     commands:
       - echo "Performing Trivy image scan after building the image..."
       - trivy image "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" >> trivyimage.txt
+
       - echo "Running OWASP Dependency-Check scan..."
       - cd dependency-check/bin
       - ./dependency-check.sh --scan . --format ALL
-      - echo "Build completed successfully!"
-      - echo "Running SonarQube analysis result"
-      - |
-        sonar-scanner \
-          -Dsonar.projectKey=swiggy \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=http://52.73.145.115:9000 \
-          -Dsonar.login=$SONAR_TOKEN
-      - aws ses send-email --from "pranitbhale@gmail.com" --to "pranitbhale@gmail.com" --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" --text "Build status: $CODEBUILD_BUILD_STATUS" --region "us-east-1"
+      - cd ../..
+
+      - echo "Running SonarQube analysis..."
+      - sonar-scanner -Dsonar.projectKey=swiggy -Dsonar.sources=. -Dsonar.host.url=http://52.73.145.115:9000 -Dsonar.login=$SONAR_TOKEN
+
+      - echo "Sending SES email with build status..."
+      - aws ses send-email \
+          --from "pranitbhale@gmail.com" \
+          --to "pranitbhale@gmail.com" \
+          --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" \
+          --text "Build status: $CODEBUILD_BUILD_STATUS" \
+          --region "us-east-1"
 
 artifacts:
   files:
