@@ -40,16 +40,21 @@ phases:
       - docker push "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest"
 
   post_build:
-    commands:
-      - echo "Performing Trivy image scan after building the image..."
-      - trivy image "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" >> trivyimage.txt
-      - echo "Running OWASP Dependency-Check scan..."
-      - cd dependency-check/bin
-      - ./dependency-check.sh --scan . --format ALL
-      - echo "Build completed successfully!"
-      - echo "Running SonarQube analysis result"
-      - sonar-scanner -Dsonar.projectKey=swiggy -Dsonar.sources=. -Dsonar.host.url=http://52.73.145.115:9000 -Dsonar.login=$SONAR_TOKEN
-      - aws ses send-email --from "pranitbhale@gmail.com" --to "pranitbhale@gmail.com" --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" --text "Build status: $CODEBUILD_BUILD_STATUS" --region "us-east-1"
+  commands:
+    - echo "Performing Trivy image scan after building the image..."
+    - trivy image "$DOCKER_REGISTRY_URL/$DOCKER_REGISTRY_USERNAME/swiggy:latest" >> trivyimage.txt
+    - echo "Running OWASP Dependency-Check scan..."
+    - cd dependency-check/bin
+    - ./dependency-check.sh --scan . --format ALL
+    - echo "Build completed successfully!"
+    - echo "Running SonarQube analysis result"
+    - >
+      sonar-scanner
+      -Dsonar.projectKey=swiggy
+      -Dsonar.sources=.
+      -Dsonar.host.url=http://52.73.145.115:9000
+      -Dsonar.login=$SONAR_TOKEN
+    - aws ses send-email --from "pranitbhale@gmail.com" --to "pranitbhale@gmail.com" --subject "CodeBuild Status: $CODEBUILD_BUILD_ID" --text "Build status: $CODEBUILD_BUILD_STATUS" --region "us-east-1"
 
 artifacts:
   files:
